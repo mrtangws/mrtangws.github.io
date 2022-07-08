@@ -1,1 +1,77 @@
-Hello World
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Gamedev Canvas Workshop</title>
+    <style>
+      * { padding: 0; margin: 0; }
+      canvas { background: #eee; display: block; margin: 0 auto; }
+    </style>
+</head>
+<body>
+
+<canvas id="myCanvas" width="480" height="320"></canvas>
+
+<script type="text/javascript" src="./js/Vector2.js"></script>
+<script>
+  // JavaScript code goes here
+  var canvas = document.getElementById("myCanvas");
+  var ctx = canvas.getContext("2d");
+
+  const Type = {
+    BALL: 0,
+    BLOCK: 1,
+    WALL: 2,
+    PILLAR: 3
+  }
+
+  class GameObject
+  {
+    constructor(type)
+    {
+      this.type = type;
+      this.pos = new Vector2(0, 0);
+      this.scale = new Vector2(1, 1);
+      this.vel = new Vector2(0, 0);
+    }
+  }
+
+  //let ball = new GameObject(BALL);
+  //ball.scale(10, 10);
+  //ball.pos
+
+
+
+  var refresh = 10.0;
+  var rate = 1000.0 / refresh;
+  var dt = 1.0 / rate;
+
+  var r = 10.0;
+
+  var gra = new Vector2(0, -9.8);
+  var vel = new Vector2(20, 20);
+  var pos = new Vector2(canvas.width * 0.5, 100);
+
+  function draw()
+  {
+    vel = vel.add(gra.scale(dt));
+    pos = pos.add(vel.scale(dt));
+    x = pos.x;
+    y = pos.y;
+    if(pos.x < r || pos.x > canvas.width - r)
+      vel.x = -vel.x;
+    if(pos.y < r || pos.y > canvas.height - r)
+      vel.y = -vel.y;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath();
+    ctx.arc(x, canvas.height - y, r, 0, Math.PI*2);
+    ctx.fillStyle = "#0095DD";
+    ctx.fill();
+    ctx.closePath();
+  }
+  setInterval(draw, 10);
+</script>
+
+</body>
+</html>
