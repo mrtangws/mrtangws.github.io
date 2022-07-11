@@ -18,11 +18,16 @@
   var canvas = document.getElementById("myCanvas");
   var ctx = canvas.getContext("2d");
 
+  function randomFloat(min, max) {
+    return Math.random() * (max - min) + min;
+  }
+
   const Type = {
     BALL: 0,
     BLOCK: 1,
     WALL: 2,
-    PILLAR: 3
+    PILLAR: 3,
+    PADDLE: 4
   }
 
   class GameObject
@@ -30,48 +35,191 @@
     constructor(type)
     {
       this.type = type;
+      this.active = false;
       this.pos = new Vector2(0, 0);
       this.scale = new Vector2(1, 1);
       this.vel = new Vector2(0, 0);
+      this.color = "#" + Math.floor(0 + Math.random()*8388608).toString(16);
     }
   }
 
-  //let ball = new GameObject(BALL);
-  //ball.scale(10, 10);
-  //ball.pos
-
-
-
-  var refresh = 10.0;
-  var rate = 1000.0 / refresh;
-  var dt = 1.0 / rate;
-
-  var r = 10.0;
-
+  var refresh = 33.3;
   var gra = new Vector2(0, -9.8);
-  var vel = new Vector2(20, 20);
-  var pos = new Vector2(canvas.width * 0.5, 100);
+  var goList = new Array();
+  var then = Date.now() / 1000;
+  var rightPressed = false;
+  var leftPressed = false;
+  var interval;
+  var pause = false;
 
-  function draw()
+  for(var i = 0; i < 10; ++i)
   {
-    vel = vel.add(gra.scale(dt));
-    pos = pos.add(vel.scale(dt));
-    x = pos.x;
-    y = pos.y;
-    if(pos.x < r || pos.x > canvas.width - r)
-      vel.x = -vel.x;
-    if(pos.y < r || pos.y > canvas.height - r)
-      vel.y = -vel.y;
+    var go = new GameObject(Type.BALL);
+    go.active = true;
+    go.vel.set(randomFloat(-50, 50), randomFloat(-50, 50));
+    go.pos.set(canvas.width * 0.5 + randomFloat(-40, 40), 100 + randomFloat(-40, 40));
+    go.scale.set(randomFloat(20, 20), randomFloat(20, 20));
+    goList.push(go);
+  }
+  var paddle = new GameObject(Type.PADDLE);
+  paddle.active = true;
+  paddle.pos.set(canvas.width * 0.5, 30);
+  paddle.scale.set(100, 20);
+  goList.push(paddle);
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  function Pause()
+  {
+    pause = !pause;
+  }
+
+  function keyDownHandler(e)
+  {
+    if(e.key == "Right" || e.key == "ArrowRight")
+    {
+        rightPressed = true;
+    }
+    else if(e.key == "Left" || e.key == "ArrowLeft")
+    {
+        leftPressed = true;
+    }
+  }
+  function keyUpHandler(e)
+  {
+    if(e.key == "Right" || e.key == "ArrowRight")
+    {
+        rightPressed = false;
+    }
+    else if(e.key == "Left" || e.key == "ArrowLeft")
+    {
+        leftPressed = false;
+    }
+  }
+
+  function collide(go1, go2)
+  {
+    if(go1.type == Type.BALL && go2.type == Type.BALL)
+    {
+      const combinedRadii2 = (go1.scale.x + go2.scale.x) * (go1.scale.x + go2.scale.x);
+      const p1p2 = go1.pos.subtract(go2.pos);
+      const v1v2 = go1.vel.subtract(go2.vel);
+      if(p1p2.magnitudeSqr() < combinedRadii2 && p1p2.dot(v1v2) < 0)
+      {
+        const N = p1p2.normalize();
+        //console.log(N.magnitude());
+        const m1 = go1.scale.x * go1.scale.x;
+        const m2 = go2.scale.x * go2.scale.x;
+        //const pi = go1.vel.scale(m1).add(go2.vel.scale(m2));
+        //const ki = go1.vel.magnitudeSqr() * m1 * 0.5 + go2.vel.magnitudeSqr() * m2 * 0.5;
+        //console.log("N   :", N.toString(), "u1", go1.vel.toString(), "u2", go2.vel.toString(), "pi", pi.toString(), "ki:", ki);
+
+        go1.vel = go1.vel.subtract(N.scale(v1v2.dot(N) * 2.0 * m2 / (m1 + m2)));
+        go2.vel = go2.vel.add(N.scale(v1v2.dot(N) * 2.0 * m1 / (m1 + m2)));
+        //const pf = go1.vel.scale(m1).add(go2.vel.scale(m2));
+        //const kf = go1.vel.magnitudeSqr() * m1 * 0.5 + go2.vel.magnitudeSqr() * m2 * 0.5;
+        //console.log("pf: ", pf, "Kf:", kf);
+        //console.log("v1v2:", v1v2.toString(), "v1", go1.vel.toString(), "v2", go2.vel.toString(), "pf", pf.toString(), "kf:", kf);
+      }
+    }
+  }
+
+  function update(dt)
+  {
+    if(pause)
+      dt = 0;
+    //console.log("dt:", dt);
+    if(rightPressed) {
+      paddle.pos.x += 7;
+    }
+    else if(leftPressed) {
+      paddle.pos.x -= 7;
+    }
+    for(var i = 0; i < goList.length; ++i)
+    {
+      var go = goList[i];
+      if(go.active)
+      {
+        for(var j = i + 1; j < goList.length; ++j)
+        {
+          var other = goList[j];
+          if(other.active)
+          {
+            collide(go, other);
+          }
+        }
+      }
+    }
+    var count = 0;
+    for(var i = 0; i < goList.length; ++i)
+    {
+      var go = goList[i];
+      if(go.active)
+      {
+        //go.vel = go.vel.add(gra.scale(dt));
+        if(go.type == Type.BALL)
+        {
+          ++count;
+          go.pos = go.pos.add(go.vel.scale(dt));
+          if(go.pos.x < go.scale.x && go.vel.x < 0 || go.pos.x > canvas.width - go.scale.x && go.vel.x > 0)
+            go.vel.x = -go.vel.x;
+          if(go.pos.y < go.scale.x && go.vel.y < 0 || go.pos.y > canvas.height - go.scale.x && go.vel.y > 0)
+            go.vel.y = -go.vel.y;
+          if(go.pos.x < 0 || go.pos.x > canvas.width || go.pos.y < 0 || go.pos.y > canvas.height)
+            go.active = false;
+        }
+      }
+    }
+    if(count == 0)
+    {
+      alert("GameOver");
+      document.location.reload();
+      clearInterval(interval);
+    }
+  }
+  function drawGO(go)
+  {
     ctx.beginPath();
-    ctx.arc(x, canvas.height - y, r, 0, Math.PI*2);
-    ctx.fillStyle = "#0095DD";
-    ctx.fill();
+    switch(go.type)
+    {
+      case Type.BALL:
+        ctx.arc(go.pos.x, canvas.height - go.pos.y, go.scale.x, 0, Math.PI*2);
+        ctx.fillStyle = go.color;
+        ctx.fill();
+        break;
+      case Type.PADDLE:
+        ctx.rect(go.pos.x - go.scale.x * 0.5, canvas.height - go.pos.y - go.scale.y * 0.5, go.scale.x, go.scale.y);
+        ctx.fillStyle = go.color;
+        ctx.fill()
+        break;
+    }
     ctx.closePath();
   }
-  setInterval(draw, 10);
+  function draw()
+  {
+    //for(var i = 0; i < goList.length; ++i)
+    goList.forEach(function(go)
+    {
+      if(go.active)
+      {
+        drawGO(go);
+      }
+    });
+  }
+  function loop()
+  {
+    var now = Date.now() / 1000;
+    var elapsedTime = now - then;
+    then = now;
+    //console.log(elapsedTime);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    update(elapsedTime);
+    draw();
+  }
+  document.addEventListener("keydown", keyDownHandler, false);
+  document.addEventListener("keyup", keyUpHandler, false);
+  interval = setInterval(loop, refresh);
 </script>
+
+  <input type = "button" onclick = "Pause();" name = "ok" value = "Click Me" />
 
 </body>
 </html>
