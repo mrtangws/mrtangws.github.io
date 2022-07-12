@@ -10,7 +10,7 @@
 </head>
 <body>
 
-<canvas id="myCanvas" width="480" height="320"></canvas>
+<canvas id="myCanvas" width="600" height="400"></canvas>
 
 <script type="text/javascript" src="./js/Vector2.js"></script>
 <script>
@@ -27,7 +27,8 @@
     BLOCK: 1,
     WALL: 2,
     PILLAR: 3,
-    PADDLE: 4
+    PADDLE: 4,
+    BRICK: 5
   }
 
   class GameObject
@@ -54,20 +55,37 @@
   var pause = false;
   var pillar = new GameObject(Type.pillar);
   const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+  const brickRowCount = 3;
+  const brickColumnCount = 5;
+  const brickWidth = canvas.width / brickColumnCount;
+  const brickHelight = canvas.height * 0.5 / brickRowCount;
+  var score = 0;
+  var targetX = canvas.width * 0.5;
 
-  for(var i = 0; i < 10; ++i)
+  for(var i = 0; i < 5; ++i)
   {
     var go = new GameObject(Type.BALL);
     go.active = true;
     go.vel.set(randomFloat(-50, 50), randomFloat(-50, 50));
     go.pos.set(canvas.width * 0.5 + randomFloat(-40, 40), 100 + randomFloat(-40, 40));
-    go.scale.set(randomFloat(20, 20), randomFloat(20, 20));
+    go.scale.set(canvas.height / 20, canvas.height / 20);
     goList.push(go);
+  }
+  for(var row = 0; row < brickRowCount; ++row)
+  {
+    for(var col = 0; col < brickColumnCount; ++col)
+    {
+      var go = new GameObject(Type.BRICK);
+      go.active = true;
+      go.pos.set((col + 0.5) * brickWidth, canvas.height * 0.5 + (row + 0.5) * brickHelight);
+      go.scale.set(brickWidth, brickHelight);
+      goList.push(go);
+    }
   }
   var paddle = new GameObject(Type.PADDLE);
   paddle.active = true;
-  paddle.pos.set(canvas.width * 0.5, 10);
-  paddle.scale.set(100, 20);
+  paddle.scale.set(canvas.width / 5, canvas.height / 10);
+  paddle.pos.set(canvas.width * 0.5, paddle.scale.y / 2);
   goList.push(paddle);
 
   function Pause()
@@ -75,7 +93,7 @@
     pause = !pause;
   }
 
-  function collide(go1, go2)
+  function collide2(go1, go2)
   {
     switch(go2.type)
     {
@@ -87,23 +105,17 @@
         if(p1p2.magnitudeSqr() < combinedRadii2 && p1p2.dot(v1v2) < 0)
         {
           const N = p1p2.normalize();
-          //console.log(N.magnitude());
           const m1 = go1.scale.x * go1.scale.x;
           const m2 = go2.scale.x * go2.scale.x;
-          //const pi = go1.vel.scale(m1).add(go2.vel.scale(m2));
-          //const ki = go1.vel.magnitudeSqr() * m1 * 0.5 + go2.vel.magnitudeSqr() * m2 * 0.5;
-          //console.log("N   :", N.toString(), "u1", go1.vel.toString(), "u2", go2.vel.toString(), "pi", pi.toString(), "ki:", ki);
           const dVel = N.scale(v1v2.dot(N) * 2.0 * m2 / (m1 + m2));
           go1.vel = go1.vel.subtract(dVel);
           go2.vel = go2.vel.add(dVel);
-          //const pf = go1.vel.scale(m1).add(go2.vel.scale(m2));
-          //const kf = go1.vel.magnitudeSqr() * m1 * 0.5 + go2.vel.magnitudeSqr() * m2 * 0.5;
-          //console.log("pf: ", pf, "Kf:", kf);
-          //console.log("v1v2:", v1v2.toString(), "v1", go1.vel.toString(), "v2", go2.vel.toString(), "pf", pf.toString(), "kf:", kf);
+          return true;
         }
         break;
       }
       case Type.PADDLE:
+      case Type.BRICK:
       {
         var N = go2.dir;
         var NP = new Vector2(N.y, -N.x);
@@ -121,7 +133,7 @@
           {
             const N = p1p2.normalize();
             go1.vel = go1.vel.subtract(N.scale(v1v2.dot(N) * 2.0));
-            return;
+            return true;
           }
         }
         const p1w0 = go1.pos.subtract(go2.pos);
@@ -132,16 +144,33 @@
         if(p1w0.dot(N) < r + h && p1w0.dot(NP) < l && v1v2.dot(N) < 0)
         {
           go1.vel = go1.vel.subtract(N.scale(v1v2.dot(N) * 2.0));
-          return;
+          return true;
         }
         if(p1w0.dot(NP) < r + l && p1w0.dot(N) < h && v1v2.dot(NP) < 0)
         {
           go1.vel = go1.vel.subtract(NP.scale(v1v2.dot(NP) * 2.0));
-          return;
+          return true;
         }
         break;
       }
     }
+    return false;
+  }
+  function collide(go1, go2)
+  {
+    const retVal = collide2(go1, go2);
+    if(retVal && go2.type == Type.BRICK)
+    {
+      go2.active = false;
+      ++score;
+      if(score == brickRowCount * brickColumnCount)
+      {
+        alert("YOU WIN, CONGRATULATIONS!");
+        document.location.reload();
+        clearInterval(interval);
+      }
+    }
+    return retVal;
   }
 
   function update(dt)
@@ -152,6 +181,8 @@
     if(leftPressed == rightPressed)
     {
       paddle.vel.x = 0;
+      const diffX = targetX - paddle.pos.x;
+      paddle.vel.x = Math.max(Math.min(diffX, 250), -250);
     }
     else if(rightPressed) {
       paddle.vel.x = 200;
@@ -170,9 +201,13 @@
           if(other.active)
           {
             if(go.type == Type.BALL)
+            {
               collide(go, other);
+            }
             else if(other.type == Type.BALL)
+            {
               collide(other, go);
+            }
           }
         }
       }
@@ -195,6 +230,19 @@
           if(go.pos.x < 0 || go.pos.x > canvas.width || go.pos.y < go.scale.x || go.pos.y > canvas.height)
             go.active = false;
         }
+        if(go.type == Type.PADDLE)
+        {
+          if(go.pos.x < go.scale.x * 0.5)
+          {
+            go.pos.x = go.scale.x * 0.5;
+            go.vel.x = 0;
+          }
+          if(go.pos.x > canvas.width - go.scale.x * 0.5)
+          {
+            go.pos.x = canvas.width - go.scale.x * 0.5;
+            go.vel.x = 0;
+          }
+        }
       }
     }
     if(count == 0)
@@ -215,6 +263,7 @@
         ctx.fill();
         break;
       case Type.PADDLE:
+      case Type.BRICK:
         ctx.rect(go.pos.x - go.scale.x * 0.5, canvas.height - go.pos.y - go.scale.y * 0.5, go.scale.x, go.scale.y);
         ctx.fillStyle = go.color;
         ctx.fill()
@@ -232,6 +281,9 @@
         drawGO(go);
       }
     });
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "#FF9500";
+    ctx.fillText("Score: "+score, 8, 20);
   }
   function loop()
   {
@@ -253,6 +305,7 @@
     {
         leftPressed = true;
     }
+    console.log("screenX", e.screenX);
   });
   document.addEventListener("keyup", function(e)
   {
@@ -264,6 +317,13 @@
     {
         leftPressed = false;
     }
+  });
+  canvas.addEventListener("mousemove", function(e)
+  {
+    //console.log("relatedTarget:", e.relatedTarget);
+    console.log("offsetX:", e.offsetX);
+    targetX = e.offsetX;
+    //console.log("offsetY:", e.offsetY);
   });
   interval = setInterval(loop, refresh);
 </script>
