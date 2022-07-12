@@ -39,6 +39,7 @@
       this.pos = new Vector2(0, 0);
       this.scale = new Vector2(1, 1);
       this.vel = new Vector2(0, 0);
+      this.dir = new Vector2(0, 1);
       this.color = "#" + Math.floor(0 + Math.random()*8388608).toString(16);
     }
   }
@@ -51,6 +52,8 @@
   var leftPressed = false;
   var interval;
   var pause = false;
+  var pillar = new GameObject(Type.pillar);
+  const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
 
   for(var i = 0; i < 10; ++i)
   {
@@ -63,7 +66,7 @@
   }
   var paddle = new GameObject(Type.PADDLE);
   paddle.active = true;
-  paddle.pos.set(canvas.width * 0.5, 30);
+  paddle.pos.set(canvas.width * 0.5, 10);
   paddle.scale.set(100, 20);
   goList.push(paddle);
 
@@ -72,52 +75,71 @@
     pause = !pause;
   }
 
-  function keyDownHandler(e)
-  {
-    if(e.key == "Right" || e.key == "ArrowRight")
-    {
-        rightPressed = true;
-    }
-    else if(e.key == "Left" || e.key == "ArrowLeft")
-    {
-        leftPressed = true;
-    }
-  }
-  function keyUpHandler(e)
-  {
-    if(e.key == "Right" || e.key == "ArrowRight")
-    {
-        rightPressed = false;
-    }
-    else if(e.key == "Left" || e.key == "ArrowLeft")
-    {
-        leftPressed = false;
-    }
-  }
-
   function collide(go1, go2)
   {
-    if(go1.type == Type.BALL && go2.type == Type.BALL)
+    switch(go2.type)
     {
-      const combinedRadii2 = (go1.scale.x + go2.scale.x) * (go1.scale.x + go2.scale.x);
-      const p1p2 = go1.pos.subtract(go2.pos);
-      const v1v2 = go1.vel.subtract(go2.vel);
-      if(p1p2.magnitudeSqr() < combinedRadii2 && p1p2.dot(v1v2) < 0)
+      case Type.BALL:
       {
-        const N = p1p2.normalize();
-        //console.log(N.magnitude());
-        const m1 = go1.scale.x * go1.scale.x;
-        const m2 = go2.scale.x * go2.scale.x;
-        //const pi = go1.vel.scale(m1).add(go2.vel.scale(m2));
-        //const ki = go1.vel.magnitudeSqr() * m1 * 0.5 + go2.vel.magnitudeSqr() * m2 * 0.5;
-        //console.log("N   :", N.toString(), "u1", go1.vel.toString(), "u2", go2.vel.toString(), "pi", pi.toString(), "ki:", ki);
-
-        go1.vel = go1.vel.subtract(N.scale(v1v2.dot(N) * 2.0 * m2 / (m1 + m2)));
-        go2.vel = go2.vel.add(N.scale(v1v2.dot(N) * 2.0 * m1 / (m1 + m2)));
-        //const pf = go1.vel.scale(m1).add(go2.vel.scale(m2));
-        //const kf = go1.vel.magnitudeSqr() * m1 * 0.5 + go2.vel.magnitudeSqr() * m2 * 0.5;
-        //console.log("pf: ", pf, "Kf:", kf);
-        //console.log("v1v2:", v1v2.toString(), "v1", go1.vel.toString(), "v2", go2.vel.toString(), "pf", pf.toString(), "kf:", kf);
+        const combinedRadii2 = (go1.scale.x + go2.scale.x) * (go1.scale.x + go2.scale.x);
+        const p1p2 = go1.pos.subtract(go2.pos);
+        const v1v2 = go1.vel.subtract(go2.vel);
+        if(p1p2.magnitudeSqr() < combinedRadii2 && p1p2.dot(v1v2) < 0)
+        {
+          const N = p1p2.normalize();
+          //console.log(N.magnitude());
+          const m1 = go1.scale.x * go1.scale.x;
+          const m2 = go2.scale.x * go2.scale.x;
+          //const pi = go1.vel.scale(m1).add(go2.vel.scale(m2));
+          //const ki = go1.vel.magnitudeSqr() * m1 * 0.5 + go2.vel.magnitudeSqr() * m2 * 0.5;
+          //console.log("N   :", N.toString(), "u1", go1.vel.toString(), "u2", go2.vel.toString(), "pi", pi.toString(), "ki:", ki);
+          const dVel = N.scale(v1v2.dot(N) * 2.0 * m2 / (m1 + m2));
+          go1.vel = go1.vel.subtract(dVel);
+          go2.vel = go2.vel.add(dVel);
+          //const pf = go1.vel.scale(m1).add(go2.vel.scale(m2));
+          //const kf = go1.vel.magnitudeSqr() * m1 * 0.5 + go2.vel.magnitudeSqr() * m2 * 0.5;
+          //console.log("pf: ", pf, "Kf:", kf);
+          //console.log("v1v2:", v1v2.toString(), "v1", go1.vel.toString(), "v2", go2.vel.toString(), "pf", pf.toString(), "kf:", kf);
+        }
+        break;
+      }
+      case Type.PADDLE:
+      {
+        var N = go2.dir;
+        var NP = new Vector2(N.y, -N.x);
+        const r = go1.scale.x;
+        const l = go2.scale.x * 0.5;
+        const h = go2.scale.y * 0.5;
+        pillar.scale.set(h, h);
+        const combinedRadii2 = r * r;
+        const v1v2 = go1.vel.subtract(go2.vel);
+        for(var i = 0; i < corners.length; ++i)
+        {
+          pillar.pos.set(go2.pos.x + corners[i][0] * l, go2.pos.y + corners[i][1] * h);
+          const p1p2 = go1.pos.subtract(pillar.pos);
+          if(p1p2.magnitudeSqr() < combinedRadii2 && p1p2.dot(v1v2) < 0)
+          {
+            const N = p1p2.normalize();
+            go1.vel = go1.vel.subtract(N.scale(v1v2.dot(N) * 2.0));
+            return;
+          }
+        }
+        const p1w0 = go1.pos.subtract(go2.pos);
+        if(p1w0.dot(N) < 0)
+          N = N.scale(-1);
+        if(p1w0.dot(NP) < 0)
+          NP = NP.scale(-1);
+        if(p1w0.dot(N) < r + h && p1w0.dot(NP) < l && v1v2.dot(N) < 0)
+        {
+          go1.vel = go1.vel.subtract(N.scale(v1v2.dot(N) * 2.0));
+          return;
+        }
+        if(p1w0.dot(NP) < r + l && p1w0.dot(N) < h && v1v2.dot(NP) < 0)
+        {
+          go1.vel = go1.vel.subtract(NP.scale(v1v2.dot(NP) * 2.0));
+          return;
+        }
+        break;
       }
     }
   }
@@ -127,13 +149,17 @@
     if(pause)
       dt = 0;
     //console.log("dt:", dt);
-    if(rightPressed) {
-      paddle.pos.x += 7;
+    if(leftPressed == rightPressed)
+    {
+      paddle.vel.x = 0;
     }
-    else if(leftPressed) {
-      paddle.pos.x -= 7;
+    else if(rightPressed) {
+      paddle.vel.x = 200;
     }
-    for(var i = 0; i < goList.length; ++i)
+    else {
+      paddle.vel.x = -200;
+    }
+    for(var i = 0; i < goList.length; ++i) //collision check
     {
       var go = goList[i];
       if(go.active)
@@ -143,27 +169,30 @@
           var other = goList[j];
           if(other.active)
           {
-            collide(go, other);
+            if(go.type == Type.BALL)
+              collide(go, other);
+            else if(other.type == Type.BALL)
+              collide(other, go);
           }
         }
       }
     }
     var count = 0;
-    for(var i = 0; i < goList.length; ++i)
+    for(var i = 0; i < goList.length; ++i) //motion
     {
       var go = goList[i];
       if(go.active)
       {
         //go.vel = go.vel.add(gra.scale(dt));
+        go.pos = go.pos.add(go.vel.scale(dt));
         if(go.type == Type.BALL)
         {
           ++count;
-          go.pos = go.pos.add(go.vel.scale(dt));
           if(go.pos.x < go.scale.x && go.vel.x < 0 || go.pos.x > canvas.width - go.scale.x && go.vel.x > 0)
             go.vel.x = -go.vel.x;
-          if(go.pos.y < go.scale.x && go.vel.y < 0 || go.pos.y > canvas.height - go.scale.x && go.vel.y > 0)
+          if(go.pos.y > canvas.height - go.scale.x && go.vel.y > 0)
             go.vel.y = -go.vel.y;
-          if(go.pos.x < 0 || go.pos.x > canvas.width || go.pos.y < 0 || go.pos.y > canvas.height)
+          if(go.pos.x < 0 || go.pos.x > canvas.width || go.pos.y < go.scale.x || go.pos.y > canvas.height)
             go.active = false;
         }
       }
@@ -214,12 +243,32 @@
     update(elapsedTime);
     draw();
   }
-  document.addEventListener("keydown", keyDownHandler, false);
-  document.addEventListener("keyup", keyUpHandler, false);
+  document.addEventListener("keydown", function(e)
+  {
+    if(e.key == "Right" || e.key == "ArrowRight" || e.key == "d" || e.key == "D")
+    {
+        rightPressed = true;
+    }
+    if(e.key == "Left" || e.key == "ArrowLeft" || e.key == "a" || e.key == "A")
+    {
+        leftPressed = true;
+    }
+  });
+  document.addEventListener("keyup", function(e)
+  {
+    if(e.key == "Right" || e.key == "ArrowRight" || e.key == "d" || e.key == "D")
+    {
+        rightPressed = false;
+    }
+    if(e.key == "Left" || e.key == "ArrowLeft" || e.key == "a" || e.key == "A")
+    {
+        leftPressed = false;
+    }
+  });
   interval = setInterval(loop, refresh);
 </script>
 
-  <input type = "button" onclick = "Pause();" name = "ok" value = "Click Me" />
+  <input type = "button" onclick = "Pause();" name = "ok" value = "Pause" />
 
 </body>
 </html>
