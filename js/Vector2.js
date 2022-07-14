@@ -246,6 +246,23 @@ class Vector2 {
 	 */
 	invert() { return new Vector2(this.y, this.x); }
 
+  	/**
+  	 * Return a new vector with speed capped
+  	 *
+  	 * @example new Vector2(30, 40).capSpeed(10) // (6, 8)
+  	 *
+  	 * @returns {Vector2}
+  	 * @memberof Vector2
+  	 */
+    capSpeed(speed) {
+      const mag = this.magnitude();
+      if(mag > speed)
+      {
+        this.y /= mag * speed;
+        this.x /= mag * speed;
+      }
+    }
+
 	/**
 	 * Shorthand for writing Vector2(0, 0).
 	 * @returns {Vector2}

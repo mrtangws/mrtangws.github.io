@@ -51,24 +51,26 @@
   var then = Date.now() / 1000;
   var rightPressed = false;
   var leftPressed = false;
-  var interval;
+  //var interval;
   var pause = false;
   var pillar = new GameObject(Type.pillar);
   const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
-  const brickRowCount = 3;
-  const brickColumnCount = 5;
+  const brickRowCount = 5;
+  const brickColumnCount = 10;
   const brickWidth = canvas.width / brickColumnCount;
-  const brickHelight = canvas.height * 0.5 / brickRowCount;
+  const brickHelight = canvas.height * 0.4 / brickRowCount;
   var score = 0;
+  var lives = 5;
   var targetX = canvas.width * 0.5;
+  const MAX_SPEED = 100;
 
-  for(var i = 0; i < 5; ++i)
+  for(var i = 0; i < lives; ++i)
   {
     var go = new GameObject(Type.BALL);
     go.active = true;
     go.vel.set(randomFloat(-50, 50), randomFloat(-50, 50));
     go.pos.set(canvas.width * 0.5 + randomFloat(-40, 40), 100 + randomFloat(-40, 40));
-    go.scale.set(canvas.height / 20, canvas.height / 20);
+    go.scale.set(canvas.height / 25, canvas.height / 25);
     goList.push(go);
   }
   for(var row = 0; row < brickRowCount; ++row)
@@ -84,7 +86,7 @@
   }
   var paddle = new GameObject(Type.PADDLE);
   paddle.active = true;
-  paddle.scale.set(canvas.width / 5, canvas.height / 10);
+  paddle.scale.set(canvas.width / 5, canvas.height / 12.5);
   paddle.pos.set(canvas.width * 0.5, paddle.scale.y / 2);
   goList.push(paddle);
 
@@ -159,15 +161,21 @@
   function collide(go1, go2)
   {
     const retVal = collide2(go1, go2);
-    if(retVal && go2.type == Type.BRICK)
+    if(retVal)
     {
-      go2.active = false;
-      ++score;
-      if(score == brickRowCount * brickColumnCount)
+      /*go1.vel.capSpeed(MAX_SPEED);
+      if(go2.type == Type.BALL)
+        go2.vel.capSpeed(MAX_SPEED);*/
+      if(go2.type == Type.BRICK)
       {
-        alert("YOU WIN, CONGRATULATIONS!");
-        document.location.reload();
-        clearInterval(interval);
+        go2.active = false;
+        ++score;
+        if(score == brickRowCount * brickColumnCount)
+        {
+          alert("YOU WIN, CONGRATULATIONS!");
+          document.location.reload();
+          //clearInterval(interval);
+        }
       }
     }
     return retVal;
@@ -212,7 +220,7 @@
         }
       }
     }
-    var count = 0;
+    //var count = 0;
     for(var i = 0; i < goList.length; ++i) //motion
     {
       var go = goList[i];
@@ -222,13 +230,16 @@
         go.pos = go.pos.add(go.vel.scale(dt));
         if(go.type == Type.BALL)
         {
-          ++count;
+          //++count;
           if(go.pos.x < go.scale.x && go.vel.x < 0 || go.pos.x > canvas.width - go.scale.x && go.vel.x > 0)
             go.vel.x = -go.vel.x;
           if(go.pos.y > canvas.height - go.scale.x && go.vel.y > 0)
             go.vel.y = -go.vel.y;
           if(go.pos.x < 0 || go.pos.x > canvas.width || go.pos.y < go.scale.x || go.pos.y > canvas.height)
+          {
             go.active = false;
+            --lives;
+          }
         }
         if(go.type == Type.PADDLE)
         {
@@ -245,11 +256,12 @@
         }
       }
     }
-    if(count == 0)
+    if(lives == 0)
     {
+      lives = -1;
       alert("GameOver");
       document.location.reload();
-      clearInterval(interval);
+      //clearInterval(interval);
     }
   }
   function drawGO(go)
@@ -284,6 +296,10 @@
     ctx.font = "16px Arial";
     ctx.fillStyle = "#FF9500";
     ctx.fillText("Score: "+score, 8, 20);
+
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "#FF9500";
+    ctx.fillText("Lives: "+lives, canvas.width-65, 20);
   }
   function loop()
   {
@@ -294,6 +310,7 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     update(elapsedTime);
     draw();
+    requestAnimationFrame(loop);
   }
   document.addEventListener("keydown", function(e)
   {
@@ -318,14 +335,17 @@
         leftPressed = false;
     }
   });
-  canvas.addEventListener("mousemove", function(e)
+  document.addEventListener("mousemove", function(e)
   {
-    //console.log("relatedTarget:", e.relatedTarget);
-    console.log("offsetX:", e.offsetX);
-    targetX = e.offsetX;
-    //console.log("offsetY:", e.offsetY);
+    //console.log("offsetX:", e.offsetX);
+    //targetX = e.offsetX;
+    var relativeX = e.clientX - canvas.offsetLeft;
+    if(relativeX > 0 && relativeX < canvas.width) {
+      targetX = relativeX;
+    }
   });
-  interval = setInterval(loop, refresh);
+  //interval = setInterval(loop, refresh);
+  loop();
 </script>
 
   <input type = "button" onclick = "Pause();" name = "ok" value = "Pause" />
