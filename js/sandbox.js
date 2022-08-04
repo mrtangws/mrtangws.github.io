@@ -55,16 +55,16 @@ if (cognitoUser != null) {
 
 			// Add the User's Id Token to the Cognito credentials login map.
 			AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-				IdentityPoolId: 'YOUR_IDENTITY_POOL_ID',
+				IdentityPoolId: 'ap-southeast-2:8cd5f606-dfba-49cb-a039-4a15e9324e24',
 				Logins: {
-					'cognito-idp.<region>.amazonaws.com/<YOUR_USER_POOL_ID>': result.getIdToken().getJwtToken()
+					'cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_QxO4zAypr': result.getIdToken().getJwtToken()
 				}
 			});
 		}
 	});
 }
 
-var refresh = 33.3;
+// var refresh = 33.3;
 var gra = new Vector2(0, -9.8);
 var goList = new Array();
 var then = Date.now() / 1000;
