@@ -1,4 +1,4 @@
-import Vector2 from './Vector2.js';
+import {Vector2} from './Vector2.js';
 //Vector2 = require('Vector2');
 
 var canvas = document.getElementById("myCanvas");
