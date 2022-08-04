@@ -1,4 +1,5 @@
 import {Vector2} from './Vector2.js';
+import {CognitoAuth} from 'amazon-cognito-auth-js';
 
 var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d");
@@ -45,6 +46,30 @@ class GameObject
     this.point = new Point();
   }
 }
+
+var authData = {
+    UserPoolId: 'ap-southeast-2_QxO4zAypr',
+    ClientId: '528sv3n60c6h15m39lr781tn6n',
+    RedirectUriSignIn : 'https://mrtangws.github.io',
+    RedirectUriSignOut : 'https://mrtangws.github.io',
+    AppWebDomain : 'github.io',
+    TokenScopesArray: ['email']
+    };
+    var auth = new CognitoAuth(authData);
+    auth.userhandler = {
+    onSuccess: function(result) {
+      //you can do something here
+    },
+    onFailure: function(err) {
+        // do somethig if fail
+    }
+};
+
+//get the current URL with the Hash that contain Cognito Tokens tokens
+var curUrl = window.location.href;
+
+//This parse the hash and set the user on the local storage.
+auth.parseCognitoWebResponse(curUrl);
 
 var cognitoUser = userPool.getCurrentUser();
 
