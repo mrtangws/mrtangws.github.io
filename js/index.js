@@ -80,6 +80,11 @@ function Pause()
   pause = !pause;
 }
 
+let pauseButton = document.getElementById("pauseButton");
+pauseButton.addEventListener('click', event => {
+  Pause();
+});
+
 function collide2(go1, go2)
 {
   switch(go2.type)
