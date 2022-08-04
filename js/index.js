@@ -13,22 +13,7 @@ const Type = {
   WALL: 2,
   PILLAR: 3,
   PADDLE: 4,
-  BRICK: 5,
-  NPC: 6
-}
-
-class Point
-{
-  constructor(x = 0, y = 0)
-  {
-    this.x = x;
-    this.y = y;
-  }
-  set(x = 0, y = x)
-  {
-    this.x = x;
-    this.y = y;
-  }
+  BRICK: 5
 }
 
 class GameObject
@@ -42,7 +27,6 @@ class GameObject
     this.vel = new Vector2(0, 0);
     this.dir = new Vector2(0, 1);
     this.color = "#" + Math.floor(0 + Math.random()*8388608).toString(16);
-    this.point = new Point();
   }
 }
 
@@ -64,16 +48,6 @@ var score = 0;
 var lives = 5;
 var targetX = canvas.width * 0.5;
 const MAX_SPEED = 100;
-var npc = new GameObject(Type.NPC);
-const gridSize = 20;
-const gridWidth = canvas.width / gridSize;
-const gridHeight = canvas.height / gridSize;
-npc.active = true;
-npc.point = new Point(0,0);
-npc.scale.set(gridSize, gridSize);
-goList.push(npc);
-var fetchTimer = 0;
-var firstUpdate = true;
 
 for(var i = 0; i < lives; ++i)
 {
@@ -84,22 +58,21 @@ for(var i = 0; i < lives; ++i)
   go.scale.set(canvas.height / 25, canvas.height / 25);
   goList.push(go);
 }
-// for(var row = 0; row < brickRowCount; ++row)
-// {
-//   for(var col = 0; col < brickColumnCount; ++col)
-//   {
-//     var go = new GameObject(Type.BRICK);
-//     go.active = true;
-//     go.pos.set((col + 0.5) * brickWidth, canvas.height * 0.5 + (row + 0.5) * brickHelight);
-//     go.scale.set(brickWidth, brickHelight);
-//     goList.push(go);
-//   }
-// }
+for(var row = 0; row < brickRowCount; ++row)
+{
+  for(var col = 0; col < brickColumnCount; ++col)
+  {
+    var go = new GameObject(Type.BRICK);
+    go.active = true;
+    go.pos.set((col + 0.5) * brickWidth, canvas.height * 0.5 + (row + 0.5) * brickHelight);
+    go.scale.set(brickWidth, brickHelight);
+    goList.push(go);
+  }
+}
 var paddle = new GameObject(Type.PADDLE);
 paddle.active = true;
 paddle.scale.set(canvas.width / 5, canvas.height / 12.5);
 paddle.pos.set(canvas.width * 0.5, paddle.scale.y / 2);
-//paddle.active = false;
 goList.push(paddle);
 
 function Pause()
@@ -195,28 +168,8 @@ function collide(go1, go2)
 
 function update(dt)
 {
-  if(firstUpdate)
-  {
-
-  }
   if(pause)
     dt = 0;
-  fetchTimer -= dt;
-  if(fetchTimer <= 0)
-  {
-    fetchTimer = 60;
-
-    fetch("https://ia4rxpwsdxjledbg5wxcvcq7he0rbabn.lambda-url.ap-southeast-2.on.aws/").then(function(response) {
-      return response.json();
-    }).then(function(data) {
-      console.log(data.body);
-      const obj = JSON.parse(data.body);
-      npc.point.x = obj.Item.x;
-      npc.point.y = obj.Item.y;
-    }).catch(function() {
-      console.log("http get failed");
-    });
-  }
   //console.log("dt:", dt);
   if(leftPressed == rightPressed)
   {
@@ -265,13 +218,13 @@ function update(dt)
         //++count;
         if(go.pos.x < go.scale.x && go.vel.x < 0 || go.pos.x > canvas.width - go.scale.x && go.vel.x > 0)
           go.vel.x = -go.vel.x;
-        if(go.pos.y < go.scale.x && go.vel.y < 0 || go.pos.y > canvas.height - go.scale.x && go.vel.y > 0)
+        if(go.pos.y > canvas.height - go.scale.x && go.vel.y > 0)
           go.vel.y = -go.vel.y;
-        // if(go.pos.x < 0 || go.pos.x > canvas.width || go.pos.y < go.scale.x || go.pos.y > canvas.height)
-        // {
-        //   go.active = false;
-        //   --lives;
-        // }
+        if(go.pos.x < 0 || go.pos.x > canvas.width || go.pos.y < go.scale.x || go.pos.y > canvas.height)
+        {
+          go.active = false;
+          --lives;
+        }
       }
       if(go.type == Type.PADDLE)
       {
@@ -305,11 +258,6 @@ function drawGO(go)
       ctx.arc(go.pos.x, canvas.height - go.pos.y, go.scale.x, 0, Math.PI*2);
       ctx.fillStyle = go.color;
       ctx.fill();
-      break;
-    case Type.NPC:
-      ctx.rect(go.point.x * gridSize, canvas.height - go.point.y * gridSize - go.scale.y, go.scale.x, go.scale.y);
-      ctx.fillStyle = go.color;
-      ctx.fill()
       break;
     case Type.PADDLE:
     case Type.BRICK:
