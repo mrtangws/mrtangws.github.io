@@ -1,4 +1,8 @@
 import {Vector2} from './Vector2.js';
+import * from "./script/jquery.min.js"
+import * from "./script/aws-sdk-2.487.0.min.js"
+import * from "./script/aws-cognito-sdk.min.js"
+import * from "./script/amazon-cognito-identity.min.js"
 //import {CognitoAuth} from 'amazon-cognito-auth-js';
 //var AWS = require('aws-sdk');
 //import { CognitoIdentityProviderClient, AddCustomAttributesCommand } from "@aws-sdk/client-cognito-identity-provider";
@@ -47,6 +51,71 @@ class GameObject
     this.color = "#" + Math.floor(0 + Math.random()*8388608).toString(16);
     this.point = new Point();
   }
+}
+
+//=============== AWS IDs ===============
+var userPoolId = 'ap-southeast-2_QxO4zAypr';
+var clientId = '528sv3n60c6h15m39lr781tn6n';
+var region = 'ap-southeast-2';
+var identityPoolId = 'ap-southeast-2:8cd5f606-dfba-49cb-a039-4a15e9324e24';
+//=============== AWS IDs ===============
+var cognitoUser;
+var idToken;
+var userPool;
+var poolData = {
+    UserPoolId : userPoolId,
+    ClientId : clientId
+};
+getCurrentLoggedInSession();
+
+function getCognitoIdentityCredentials(){
+    AWS.config.region = region;
+
+    var loginMap = {};
+    loginMap['cognito-idp.' + region + '.amazonaws.com/' + userPoolId] = idToken;
+
+    AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+        IdentityPoolId: identityPoolId,
+        Logins: loginMap
+    });
+
+    AWS.config.credentials.clearCachedId();
+
+    AWS.config.credentials.get(function(err) {
+        if (err){
+            logMessage(err.message);
+        }
+        else {
+            logMessage('AWS Access Key: '+ AWS.config.credentials.accessKeyId);
+            logMessage('AWS Secret Key: '+ AWS.config.credentials.secretAccessKey);
+            logMessage('AWS Session Token: '+ AWS.config.credentials.sessionToken);
+        }
+    });
+}
+
+function getCurrentLoggedInSession(){
+
+    userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+    cognitoUser = userPool.getCurrentUser();
+
+    if(cognitoUser != null){
+        cognitoUser.getSession(function(err, session) {
+            if (err) {
+                logMessage(err.message);
+            }else{
+                logMessage('Session found! Logged in.');
+                switchToLoggedInView();
+                idToken = session.getIdToken().getJwtToken();
+                getCognitoIdentityCredentials();
+            }
+        });
+    }else{
+        logMessage('Session expired. Please log in again.');
+    }
+}
+function logMessage(message){
+    //$('#log').append(message + '</br>');
+    console.log(message);
 }
 
 // // Set the region where your identity pool exists (us-east-1, eu-west-1)
