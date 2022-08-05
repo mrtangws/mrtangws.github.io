@@ -84,6 +84,7 @@ function getCognitoIdentityCredentials(){
     AWS.config.credentials.get(function(err) {
         if (err){
             logMessage(err.message);
+            window.location.replace("https://clouette.auth.ap-southeast-2.amazoncognito.com/login?client_id=528sv3n60c6h15m39lr781tn6n&response_type=code&scope=aws.cognito.signin.user.admin+email+openid+phone+profile&redirect_uri=https://mrtangws.github.io/");
         }
         else {
             logMessage('AWS Access Key: '+ AWS.config.credentials.accessKeyId);
