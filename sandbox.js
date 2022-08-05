@@ -69,6 +69,7 @@ var poolData = {
 getCurrentLoggedInSession();
 
 function getCognitoIdentityCredentials(){
+  console.log("getCognitoIdentityCredentials()");
     AWS.config.region = region;
 
     var loginMap = {};
@@ -107,7 +108,7 @@ function getCurrentLoggedInSession(){
 
             }else{
                 logMessage('Session found! Logged in.');
-                switchToLoggedInView();
+                //switchToLoggedInView();
                 idToken = session.getIdToken().getJwtToken();
                 getCognitoIdentityCredentials();
             }
