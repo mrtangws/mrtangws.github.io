@@ -1,5 +1,7 @@
 import {Vector2} from './Vector2.js';
-import {CognitoAuth} from 'amazon-cognito-auth-js';
+//import {CognitoAuth} from 'amazon-cognito-auth-js';
+//var AWS = require('aws-sdk');
+//import { CognitoIdentityProviderClient, AddCustomAttributesCommand } from "@aws-sdk/client-cognito-identity-provider";
 
 var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d");
@@ -47,47 +49,75 @@ class GameObject
   }
 }
 
-var authData = {
-    UserPoolId: 'ap-southeast-2_QxO4zAypr',
-    ClientId: '528sv3n60c6h15m39lr781tn6n',
-    RedirectUriSignIn : 'https://mrtangws.github.io',
-    RedirectUriSignOut : 'https://mrtangws.github.io',
-    AppWebDomain : 'github.io',
-    TokenScopesArray: ['email']
-    };
-    var auth = new CognitoAuth(authData);
-    auth.userhandler = {
-    onSuccess: function(result) {
-      //you can do something here
-    },
-    onFailure: function(err) {
-        // do somethig if fail
-    }
-};
+// // Set the region where your identity pool exists (us-east-1, eu-west-1)
+// AWS.config.region = 'ap-southeast-2';
+//
+// // Configure the credentials provider to use your identity pool
+// AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+//     IdentityPoolId: 'ap-southeast-2:8cd5f606-dfba-49cb-a039-4a15e9324e24',
+//     Logins: { // optional tokens, used for authenticated login
+//         //'graph.facebook.com': 'FBTOKEN',
+//         //'www.amazon.com': 'AMAZONTOKEN',
+//         'accounts.google.com': 'GOOGLETOKEN',
+//         //'appleid.apple.com': 'APPLETOKEN'
+//     }
+// });
+//
+// // Make the call to obtain credentials
+// AWS.config.credentials.get(function(){
+//
+//     // Credentials will be available when this function is called.
+//     var accessKeyId = AWS.config.credentials.accessKeyId;
+//     var secretAccessKey = AWS.config.credentials.secretAccessKey;
+//     var sessionToken = AWS.config.credentials.sessionToken;
+//
+// });
+//
+// var identityId = AWS.config.credentials.identityId;
 
-//get the current URL with the Hash that contain Cognito Tokens tokens
-var curUrl = window.location.href;
 
-//This parse the hash and set the user on the local storage.
-auth.parseCognitoWebResponse(curUrl);
+// var authData = {
+//     UserPoolId: 'ap-southeast-2_QxO4zAypr',
+//     ClientId: '528sv3n60c6h15m39lr781tn6n',
+//     RedirectUriSignIn : 'https://mrtangws.github.io',
+//     RedirectUriSignOut : 'https://mrtangws.github.io',
+//     AppWebDomain : 'github.io',
+//     TokenScopesArray: ['email']
+//     };
+//     var auth = new CognitoAuth(authData);
+//     auth.userhandler = {
+//     onSuccess: function(result) {
+//       //you can do something here
+//     },
+//     onFailure: function(err) {
+//         // do somethig if fail
+//     }
+// };
+//
+// //get the current URL with the Hash that contain Cognito Tokens tokens
+// var curUrl = window.location.href;
+//
+// //This parse the hash and set the user on the local storage.
+// auth.parseCognitoWebResponse(curUrl);
 
-var cognitoUser = userPool.getCurrentUser();
 
-if (cognitoUser != null) {
-	cognitoUser.getSession(function(err, result) {
-		if (result) {
-			console.log('You are now logged in.');
-
-			// Add the User's Id Token to the Cognito credentials login map.
-			AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-				IdentityPoolId: 'ap-southeast-2:8cd5f606-dfba-49cb-a039-4a15e9324e24',
-				Logins: {
-					'cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_QxO4zAypr': result.getIdToken().getJwtToken()
-				}
-			});
-		}
-	});
-}
+// var cognitoUser = userPool.getCurrentUser();
+//
+// if (cognitoUser != null) {
+// 	cognitoUser.getSession(function(err, result) {
+// 		if (result) {
+// 			console.log('You are now logged in.');
+//
+// 			// Add the User's Id Token to the Cognito credentials login map.
+// 			AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+// 				IdentityPoolId: 'ap-southeast-2:8cd5f606-dfba-49cb-a039-4a15e9324e24',
+// 				Logins: {
+// 					'cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_QxO4zAypr': result.getIdToken().getJwtToken()
+// 				}
+// 			});
+// 		}
+// 	});
+// }
 
 // var refresh = 33.3;
 var gra = new Vector2(0, -9.8);
