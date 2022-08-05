@@ -1,5 +1,5 @@
 import {Vector2} from './Vector2.js';
-import * from "./script/jquery.min.js"
+//import * from "./script/jquery.min.js"
 import * from "./script/aws-sdk-2.487.0.min.js"
 import * from "./script/aws-cognito-sdk.min.js"
 import * from "./script/amazon-cognito-identity.min.js"
