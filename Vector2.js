@@ -14,7 +14,7 @@
  *
  * @constructor
  */
-export class Vector2 {
+class Vector2 {
 	constructor(x = 0, y = x) {
 		this.x = Number(x);
 		this.y = Number(y);

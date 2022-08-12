@@ -1,4 +1,4 @@
-import {Vector2} from './Vector2.js';
+
 //import * from "./script/jquery.min.js"
 // import * from "./script/aws-sdk-2.487.0.min.js"
 // import * from "./script/aws-cognito-sdk.min.js"
@@ -53,146 +53,6 @@ class GameObject
   }
 }
 
-//=============== AWS IDs ===============
-var userPoolId = 'ap-southeast-2_QxO4zAypr';
-var clientId = '528sv3n60c6h15m39lr781tn6n';
-var region = 'ap-southeast-2';
-var identityPoolId = 'ap-southeast-2:8cd5f606-dfba-49cb-a039-4a15e9324e24';
-//=============== AWS IDs ===============
-var cognitoUser;
-var idToken;
-var userPool;
-var poolData = {
-    UserPoolId : userPoolId,
-    ClientId : clientId
-};
-getCurrentLoggedInSession();
-
-function getCognitoIdentityCredentials(){
-  console.log("getCognitoIdentityCredentials()");
-    AWS.config.region = region;
-
-    var loginMap = {};
-    loginMap['cognito-idp.' + region + '.amazonaws.com/' + userPoolId] = idToken;
-
-    AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-        IdentityPoolId: identityPoolId,
-        Logins: loginMap
-    });
-
-    AWS.config.credentials.clearCachedId();
-
-    AWS.config.credentials.get(function(err) {
-        if (err){
-            logMessage("getCognitoIdentityCredentials() error" + err.message);
-            // window.location.replace("https://clouette.auth.ap-southeast-2.amazoncognito.com/login?client_id=528sv3n60c6h15m39lr781tn6n&response_type=code&scope=aws.cognito.signin.user.admin+email+openid+phone+profile&redirect_uri=https://mrtangws.github.io/");
-        }
-        else {
-            logMessage('AWS Access Key: '+ AWS.config.credentials.accessKeyId);
-            logMessage('AWS Secret Key: '+ AWS.config.credentials.secretAccessKey);
-            logMessage('AWS Session Token: '+ AWS.config.credentials.sessionToken);
-        }
-    });
-}
-
-function getCurrentLoggedInSession(){
-
-    userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
-    cognitoUser = userPool.getCurrentUser();
-
-    if(cognitoUser != null){
-        cognitoUser.getSession(function(err, session) {
-            if (err) {
-                logMessage("getCurrentLoggedInSession() error" + err.message);
-                // window.location.replace("https://clouette.auth.ap-southeast-2.amazoncognito.com/login?client_id=528sv3n60c6h15m39lr781tn6n&response_type=code&scope=aws.cognito.signin.user.admin+email+openid+phone+profile&redirect_uri=https://mrtangws.github.io/");
-
-            }else{
-                logMessage('Session found! Logged in.');
-                //switchToLoggedInView();
-                idToken = session.getIdToken().getJwtToken();
-                getCognitoIdentityCredentials();
-            }
-        });
-    }else{
-        logMessage('Session expired. Please log in again.');
-        // window.location.replace("https://clouette.auth.ap-southeast-2.amazoncognito.com/login?client_id=528sv3n60c6h15m39lr781tn6n&response_type=code&scope=aws.cognito.signin.user.admin+email+openid+phone+profile&redirect_uri=https://mrtangws.github.io/");
-    }
-}
-function logMessage(message){
-    //$('#log').append(message + '</br>');
-    console.log(message);
-}
-
-// // Set the region where your identity pool exists (us-east-1, eu-west-1)
-// AWS.config.region = 'ap-southeast-2';
-//
-// // Configure the credentials provider to use your identity pool
-// AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-//     IdentityPoolId: 'ap-southeast-2:8cd5f606-dfba-49cb-a039-4a15e9324e24',
-//     Logins: { // optional tokens, used for authenticated login
-//         //'graph.facebook.com': 'FBTOKEN',
-//         //'www.amazon.com': 'AMAZONTOKEN',
-//         'accounts.google.com': 'GOOGLETOKEN',
-//         //'appleid.apple.com': 'APPLETOKEN'
-//     }
-// });
-//
-// // Make the call to obtain credentials
-// AWS.config.credentials.get(function(){
-//
-//     // Credentials will be available when this function is called.
-//     var accessKeyId = AWS.config.credentials.accessKeyId;
-//     var secretAccessKey = AWS.config.credentials.secretAccessKey;
-//     var sessionToken = AWS.config.credentials.sessionToken;
-//
-// });
-//
-// var identityId = AWS.config.credentials.identityId;
-
-
-// var authData = {
-//     UserPoolId: 'ap-southeast-2_QxO4zAypr',
-//     ClientId: '528sv3n60c6h15m39lr781tn6n',
-//     RedirectUriSignIn : 'https://mrtangws.github.io',
-//     RedirectUriSignOut : 'https://mrtangws.github.io',
-//     AppWebDomain : 'github.io',
-//     TokenScopesArray: ['email']
-//     };
-//     var auth = new CognitoAuth(authData);
-//     auth.userhandler = {
-//     onSuccess: function(result) {
-//       //you can do something here
-//     },
-//     onFailure: function(err) {
-//         // do somethig if fail
-//     }
-// };
-//
-// //get the current URL with the Hash that contain Cognito Tokens tokens
-// var curUrl = window.location.href;
-//
-// //This parse the hash and set the user on the local storage.
-// auth.parseCognitoWebResponse(curUrl);
-
-
-// var cognitoUser = userPool.getCurrentUser();
-//
-// if (cognitoUser != null) {
-// 	cognitoUser.getSession(function(err, result) {
-// 		if (result) {
-// 			console.log('You are now logged in.');
-//
-// 			// Add the User's Id Token to the Cognito credentials login map.
-// 			AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-// 				IdentityPoolId: 'ap-southeast-2:8cd5f606-dfba-49cb-a039-4a15e9324e24',
-// 				Logins: {
-// 					'cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_QxO4zAypr': result.getIdToken().getJwtToken()
-// 				}
-// 			});
-// 		}
-// 	});
-// }
-
 // var refresh = 33.3;
 var gra = new Vector2(0, -9.8);
 var goList = new Array();
@@ -219,8 +79,10 @@ npc.active = true;
 npc.point = new Point(0,0);
 npc.scale.set(gridSize, gridSize);
 goList.push(npc);
-var fetchTimer = 0;
+var fetchTimer = 5;
 var firstUpdate = true;
+var dynamodb = null;
+var lambda;
 
 for(var i = 0; i < lives; ++i)
 {
@@ -254,13 +116,13 @@ function Pause()
   pause = !pause;
 }
 
-let pauseButton = document.getElementById("pauseButton");
+//let pauseButton = document.getElementById("pauseButton");
 // pauseButton.addEventListener('click', event => {
 //   Pause();
 // });
-pauseButton.addEventListener('onclick', event => {
-  Pause();
-});
+// pauseButton.addEventListener('onclick', event => {
+//   Pause();
+// });
 
 function collide2(go1, go2)
 {
@@ -294,17 +156,6 @@ function collide2(go1, go2)
       pillar.scale.set(h, h);
       const combinedRadii2 = r * r;
       const v1v2 = go1.vel.subtract(go2.vel);
-      for(var i = 0; i < corners.length; ++i)
-      {
-        pillar.pos.set(go2.pos.x + corners[i][0] * l, go2.pos.y + corners[i][1] * h);
-        const p1p2 = go1.pos.subtract(pillar.pos);
-        if(p1p2.magnitudeSqr() < combinedRadii2 && p1p2.dot(v1v2) < 0)
-        {
-          const N = p1p2.normalize();
-          go1.vel = go1.vel.subtract(N.scale(v1v2.dot(N) * 2.0));
-          return true;
-        }
-      }
       const p1w0 = go1.pos.subtract(go2.pos);
       if(p1w0.dot(N) < 0)
         N = N.scale(-1);
@@ -319,6 +170,20 @@ function collide2(go1, go2)
       {
         go1.vel = go1.vel.subtract(NP.scale(v1v2.dot(NP) * 2.0));
         return true;
+      }
+      //if(p1w0.dot(N) > h && p1w0.dot(NP) > l)
+      {
+        for(var i = 0; i < corners.length; ++i)
+        {
+          pillar.pos.set(go2.pos.x + corners[i][0] * l, go2.pos.y + corners[i][1] * h);
+          const p1p2 = go1.pos.subtract(pillar.pos);
+          if(p1p2.magnitudeSqr() < combinedRadii2 && p1p2.dot(v1v2) < 0)
+          {
+            const N = p1p2.normalize();
+            go1.vel = go1.vel.subtract(N.scale(v1v2.dot(N) * 2.0));
+            return true;
+          }
+        }
       }
       break;
     }
@@ -348,6 +213,40 @@ function collide(go1, go2)
   return retVal;
 }
 
+async function invokeLamda() {
+  if(lambda == null) {
+    lambda = new AWS.Lambda({apiVersion: '2015-03-31'});
+    // lambda.addLayerVersionPermission(params, function (err, data) {
+    //   if (err) console.log(err, err.stack); // an error occurred
+    //   else     console.log(data);           // successful response
+    // });
+  }
+  var params = {
+    FunctionName: 'arn:aws:lambda:ap-southeast-2:319625542699:function:node-two', /* required */
+    //ClientContext: 'STRING_VALUE',
+    InvocationType: 'RequestResponse',// | RequestResponse | DryRun,
+    LogType: 'None',// | Tail,
+    Payload: '' /* Strings will be Base-64 encoded on your behalf */,
+    // Qualifier: 'STRING_VALUE'
+  };
+  const response = await lambda.invoke(params).promise();
+  if(response.StatusCode != 200){
+    console.log('Failed to get response from lambda function');
+  }
+  // console.log(response);
+  // console.log(response.Payload);
+  const payload = JSON.parse(response.Payload);
+  const obj = JSON.parse(payload.body);
+  console.log(obj);
+  npc.point.x = obj.Item.x;
+  npc.point.y = obj.Item.y;
+  return JSON.parse(response.Payload);
+  // lambda.invoke(params, function(err, data) {
+  //   if (err) console.log(err, err.stack); // an error occurred
+  //   else     console.log(data);           // successful response
+  // });
+}
+
 function update(dt)
 {
   if(firstUpdate)
@@ -359,18 +258,50 @@ function update(dt)
   fetchTimer -= dt;
   if(fetchTimer <= 0)
   {
-    fetchTimer = 60;
+    fetchTimer = 300;
 
-    fetch("https://ia4rxpwsdxjledbg5wxcvcq7he0rbabn.lambda-url.ap-southeast-2.on.aws/").then(function(response) {
-      return response.json();
-    }).then(function(data) {
-      console.log(data.body);
-      const obj = JSON.parse(data.body);
-      npc.point.x = obj.Item.x;
-      npc.point.y = obj.Item.y;
-    }).catch(function() {
-      console.log("http get failed");
-    });
+    // fetch("https://ia4rxpwsdxjledbg5wxcvcq7he0rbabn.lambda-url.ap-southeast-2.on.aws/").then(function(response) {
+    //   return response.json();
+    // }).then(function(data) {
+    //   console.log(data.body);
+    //   const obj = JSON.parse(data.body);
+    //   npc.point.x = obj.Item.x;
+    //   npc.point.y = obj.Item.y;
+    // }).catch(function() {
+    //   console.log("http get failed");
+    // });
+    //if(getCognitoIdentityCredentials() == false)
+      getCurrentLoggedInSession();
+    if(dynamodb == null)
+    {
+      //AWS.config.region = 'ap-southeast-2';
+      AWS.config.update({
+        region: 'ap-southeast-2'
+      });
+      dynamodb = new AWS.DynamoDB();
+    }
+    // if(dynamodb != null)
+    // {
+    //   var params = {
+    //    Key: {
+    //     "id": {
+    //       S: "666"
+    //      }
+    //    },
+    //    TableName: "tableOne"
+    //   };
+    //   dynamodb.getItem(params, function(err, data) {
+    //     if (err) console.log(err, err.stack); // an error occurred
+    //     else {
+    //       console.log(data);           // successful response
+    //       console.log("x: ", data.Item.x.N, " y:", data.Item.y.N);
+    //       //const obj = JSON.parse(data.Item);
+    //       npc.point.x = data.Item.x.N;
+    //       npc.point.y = data.Item.y.N;
+    //     }
+    //   });
+    // }
+    invokeLamda();
   }
   //console.log("dt:", dt);
   if(leftPressed == rightPressed)

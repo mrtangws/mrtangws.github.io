@@ -120,17 +120,6 @@ function collide2(go1, go2)
       pillar.scale.set(h, h);
       const combinedRadii2 = r * r;
       const v1v2 = go1.vel.subtract(go2.vel);
-      for(var i = 0; i < corners.length; ++i)
-      {
-        pillar.pos.set(go2.pos.x + corners[i][0] * l, go2.pos.y + corners[i][1] * h);
-        const p1p2 = go1.pos.subtract(pillar.pos);
-        if(p1p2.magnitudeSqr() < combinedRadii2 && p1p2.dot(v1v2) < 0)
-        {
-          const N = p1p2.normalize();
-          go1.vel = go1.vel.subtract(N.scale(v1v2.dot(N) * 2.0));
-          return true;
-        }
-      }
       const p1w0 = go1.pos.subtract(go2.pos);
       if(p1w0.dot(N) < 0)
         N = N.scale(-1);
@@ -145,6 +134,20 @@ function collide2(go1, go2)
       {
         go1.vel = go1.vel.subtract(NP.scale(v1v2.dot(NP) * 2.0));
         return true;
+      }
+      //if(p1w0.dot(N) > h && p1w0.dot(NP) > l)
+      {
+        for(var i = 0; i < corners.length; ++i)
+        {
+          pillar.pos.set(go2.pos.x + corners[i][0] * l, go2.pos.y + corners[i][1] * h);
+          const p1p2 = go1.pos.subtract(pillar.pos);
+          if(p1p2.magnitudeSqr() < combinedRadii2 && p1p2.dot(v1v2) < 0)
+          {
+            const N = p1p2.normalize();
+            go1.vel = go1.vel.subtract(N.scale(v1v2.dot(N) * 2.0));
+            return true;
+          }
+        }
       }
       break;
     }
