@@ -18,3 +18,11 @@ amplifytools.xcconfig
 .secret-*
 **.sample
 #amplify-do-not-edit-end
+CppTesting/.vs/Testing/v17/.suo
+*.ipch
+*.db
+*.lock
+*.vsidx
+*.log
+*.recipe
+*.txt
