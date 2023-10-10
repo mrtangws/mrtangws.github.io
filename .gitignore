@@ -26,3 +26,13 @@ CppTesting/.vs/Testing/v17/.suo
 *.log
 *.recipe
 *.txt
+*.pdb
+*.exe
+*.idb
+*.lastbuildstate
+*.tlog
+*.obj
+*.ilk
+*.opendb
+*.db-wal
+*.db-shm

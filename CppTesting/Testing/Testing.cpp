@@ -124,9 +124,9 @@ int _lcs(int m, int n) // Returns length of LCS for X[0..m-1], Y[0..n-1]
         return max(lcs(m, n - 1), lcs(m - 1, n));
 }
 
-int main()
-{
-    //std::cout << fibonacci(40) << std::endl; // uses memoizator so it works in linear time 
-    std::cout << lcs(strlen(X), strlen(Y)) << std::endl;
-        // (try it with and without memoizator)
-}
+//int main()
+//{
+//    //std::cout << fibonacci(40) << std::endl; // uses memoizator so it works in linear time 
+//    std::cout << lcs(strlen(X), strlen(Y)) << std::endl;
+//        // (try it with and without memoizator)
+//}
